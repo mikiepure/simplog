@@ -43,69 +43,67 @@ func (p LogLevel) String() string {
 	panic("undefined log level")
 }
 
-// FuncFormat ...
-type FuncFormat func(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, msg string) string
+// FormatFunc ...
+type FormatFunc func(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, msg string) string
 
 // Logger ...
 type Logger struct {
-	name       string
-	level      LogLevel
-	out        io.Writer
-	funcFormat FuncFormat
+	name   string
+	level  LogLevel
+	out    io.Writer
+	format FormatFunc
 }
 
 // New ...
 func New() *Logger {
-	return &Logger{out: os.Stdout, level: LogLevelInfo, funcFormat: funcFormatDefault}
+	return &Logger{out: os.Stdout, level: LogLevelInfo, format: formatDefault}
 }
 
-// LogLevel ...
-func (p *Logger) LogLevel() LogLevel {
+// Level ...
+func (p *Logger) Level() LogLevel {
 	return p.level
 }
 
-// SetLogLevel ...
-func (p *Logger) SetLogLevel(level LogLevel) {
+// SetLevel ...
+func (p *Logger) SetLevel(level LogLevel) {
 	p.level = level
 }
 
-// Fatal ...
+// Fatal outputs a log message with level `Fatal`.
 func (p *Logger) Fatal(v ...interface{}) bool {
 	return p.logging(LogLevelFatal, v...)
 }
 
-// Error ...
+// Error outputs a log message with level `Error`.
 func (p *Logger) Error(v ...interface{}) bool {
 	return p.logging(LogLevelError, v...)
 }
 
-// Warn ...
+// Warn outputs a log message with level `Warn`.
 func (p *Logger) Warn(v ...interface{}) bool {
 	return p.logging(LogLevelWarn, v...)
 }
 
-// Info ...
+// Info outputs a log message with level `Info`.
 func (p *Logger) Info(v ...interface{}) bool {
 	return p.logging(LogLevelInfo, v...)
 }
 
-// Debug ...
+// Debug outputs a log message with level `Debug`.
 func (p *Logger) Debug(v ...interface{}) bool {
 	return p.logging(LogLevelDebug, v...)
 }
 
-// Log ...
+// Log outputs a log message with level `level`.
 func (p *Logger) Log(level LogLevel, v ...interface{}) bool {
 	return p.logging(level, v...)
 }
 
 func (p *Logger) logging(level LogLevel, v ...interface{}) bool {
-	// filtering by log level
 	if p.level < level {
 		return false
 	}
 
-	// logging information
 	time := time.Now()
 	pc, filename, line, ok := runtime.Caller(2)
 	funcname := ""
@@ -116,16 +114,14 @@ func (p *Logger) logging(level LogLevel, v ...interface{}) bool {
 		line = 0
 	}
 
-	// format log msg
 	msg := fmt.Sprintln(v...)
-	s := p.funcFormat(p, level, time, funcname, filename, line, msg[:len(msg)-1])
+	s := p.format(p, level, time, funcname, filename, line, msg[:len(msg)-1])
 
-	// output log msg to writer
 	_, err := io.WriteString(p.out, s+"\n")
 	return err == nil
 }
 
-func funcFormatDefault(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, msg string) string {
+func formatDefault(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, msg string) string {
 	logmsg := []string{time.Format("2006/01/02 15:04:05"), level.String() + ":", msg}
 	if level < LogLevelWarn {
 		logpos := "(" + filename + ":" + strconv.Itoa(line) + ")"
