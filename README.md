@@ -1,2 +1,3 @@
 # simplog
-Simple logging library for golang
+
+Simple logging library for golang.
