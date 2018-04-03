@@ -14,16 +14,16 @@ import (
 type LogLevel uint8
 
 const (
-	// LogLevelFatal ...
-	LogLevelFatal LogLevel = iota
-	// LogLevelError ...
-	LogLevelError
-	// LogLevelWarn ...
-	LogLevelWarn
+	// LogLevelDebug ...
+	LogLevelDebug LogLevel = iota
 	// LogLevelInfo ...
 	LogLevelInfo
-	// LogLevelDebug ...
-	LogLevelDebug
+	// LogLevelWarn ...
+	LogLevelWarn
+	// LogLevelError ...
+	LogLevelError
+	// LogLevelFatal ...
+	LogLevelFatal
 )
 
 func (p LogLevel) String() string {
@@ -43,20 +43,16 @@ func (p LogLevel) String() string {
 	panic("undefined log level")
 }
 
-// FormatFunc ...
-type FormatFunc func(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, msg string) string
-
 // Logger ...
 type Logger struct {
-	name   string
-	level  LogLevel
-	out    io.Writer
-	format FormatFunc
+	level     LogLevel
+	writer    io.Writer
+	formatter Formatter
 }
 
 // New ...
 func New() *Logger {
-	return &Logger{out: os.Stdout, level: LogLevelInfo, format: FormatDefault}
+	return &Logger{level: LogLevelInfo, writer: os.Stdout, formatter: DefaultFormatter{showTime: true, showLevel: true, showPositionLevel: LogLevelError}}
 }
 
 // Level ...
@@ -67,6 +63,16 @@ func (p *Logger) Level() LogLevel {
 // SetLevel ...
 func (p *Logger) SetLevel(level LogLevel) {
 	p.level = level
+}
+
+// SetWriter ...
+func (p *Logger) SetWriter(writer io.Writer) {
+	p.writer = writer
+}
+
+// SetFormatter ...
+func (p *Logger) SetFormatter(formatter Formatter) {
+	p.formatter = formatter
 }
 
 // Fatal outputs a log message with level `Fatal`.
@@ -99,18 +105,8 @@ func (p *Logger) Log(level LogLevel, v ...interface{}) bool {
 	return p.log(level, v...)
 }
 
-// FormatDefault provides function of default log format
-func FormatDefault(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, msg string) string {
-	logmsg := []string{time.Format("2006/01/02 15:04:05"), level.String() + ":", msg}
-	if level < LogLevelWarn {
-		logpos := "(" + filename + ":" + strconv.Itoa(line) + ")"
-		logmsg = append(logmsg, logpos)
-	}
-	return strings.Join(logmsg, " ")
-}
-
 func (p *Logger) log(level LogLevel, v ...interface{}) bool {
-	if p.level < level {
+	if p.level > level {
 		return false
 	}
 
@@ -124,9 +120,42 @@ func (p *Logger) log(level LogLevel, v ...interface{}) bool {
 		line = 0
 	}
 
-	msg := fmt.Sprintln(v...)
-	s := p.format(p, level, time, funcname, filename, line, msg[:len(msg)-1])
+	msg := p.formatter.Format(p, level, time, funcname, filename, line, v...)
 
-	_, err := io.WriteString(p.out, s+"\n")
+	_, err := io.WriteString(p.writer, msg+"\n")
 	return err == nil
+}
+
+// Formatter can change log message format as you like
+type Formatter interface {
+	Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string
+}
+
+// DefaultFormatter provides default log format of simplog
+type DefaultFormatter struct {
+	showTime          bool
+	showLevel         bool
+	showPositionLevel LogLevel
+}
+
+// Format provides default log format of simplog
+func (p DefaultFormatter) Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
+	msglist := []string{}
+
+	if p.showTime {
+		msglist = append(msglist, time.Format("2006/01/02 15:04:05"))
+	}
+
+	if p.showLevel {
+		msglist = append(msglist, level.String())
+	}
+
+	logmsg := fmt.Sprintln(v...)
+	msglist = append(msglist, logmsg[:len(logmsg)-1])
+
+	if level >= p.showPositionLevel {
+		msglist = append(msglist, "("+filename+":"+strconv.Itoa(line)+")")
+	}
+
+	return strings.Join(msglist, " ")
 }
