@@ -65,9 +65,19 @@ func (p *Logger) SetLevel(level LogLevel) {
 	p.level = level
 }
 
+// Writer ...
+func (p *Logger) Writer() io.Writer {
+	return p.writer
+}
+
 // SetWriter ...
 func (p *Logger) SetWriter(writer io.Writer) {
 	p.writer = writer
+}
+
+// Formatter ...
+func (p *Logger) Formatter() Formatter {
+	return p.formatter
 }
 
 // SetFormatter ...
