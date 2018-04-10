@@ -52,7 +52,7 @@ type Logger struct {
 
 // New ...
 func New() *Logger {
-	return &Logger{level: LogLevelInfo, writer: os.Stdout, formatter: &DefaultFormatter{showTime: true, showLevel: true, showPositionLevel: LogLevelError}}
+	return &Logger{level: LogLevelInfo, writer: os.Stdout, formatter: &DefaultFormatter{ShowTime: true, ShowLevel: true, ShowPositionLevel: LogLevelError}}
 }
 
 // Level ...
@@ -143,27 +143,27 @@ type Formatter interface {
 
 // DefaultFormatter provides default log format of simplog
 type DefaultFormatter struct {
-	showTime          bool
-	showLevel         bool
-	showPositionLevel LogLevel
+	ShowTime          bool
+	ShowLevel         bool
+	ShowPositionLevel LogLevel
 }
 
 // Format provides default log format of simplog
 func (p *DefaultFormatter) Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
 	msglist := []string{}
 
-	if p.showTime {
+	if p.ShowTime {
 		msglist = append(msglist, time.Format("2006/01/02 15:04:05"))
 	}
 
-	if p.showLevel {
+	if p.ShowLevel {
 		msglist = append(msglist, level.String())
 	}
 
 	logmsg := fmt.Sprintln(v...)
 	msglist = append(msglist, logmsg[:len(logmsg)-1])
 
-	if level >= p.showPositionLevel {
+	if level >= p.ShowPositionLevel {
 		msglist = append(msglist, "("+filename+":"+strconv.Itoa(line)+")")
 	}
 

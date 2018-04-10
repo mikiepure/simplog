@@ -9,101 +9,107 @@ import (
 	"time"
 )
 
-func TestGDefaultLevel(t *testing.T) {
-	if !GFatal("test", "message") {
+func TestDefaultLevel(t *testing.T) {
+	log := New()
+
+	if !log.Fatal("test", "message") {
 		t.Fatal("fatal log shall be sent as default")
 	}
-	if !GLog(LogLevelFatal, "test", "message") {
+	if !log.Log(LogLevelFatal, "test", "message") {
 		t.Fatal("fatal log shall be sent as default")
 	}
 
-	if !GError("test", "message") {
+	if !log.Error("test", "message") {
 		t.Fatal("error log shall be sent as default")
 	}
-	if !GLog(LogLevelError, "test", "message") {
+	if !log.Log(LogLevelError, "test", "message") {
 		t.Fatal("error log shall be sent as default")
 	}
 
-	if !GWarn("test", "message") {
+	if !log.Warn("test", "message") {
 		t.Fatal("warn log shall be sent as default")
 	}
-	if !GLog(LogLevelWarn, "test", "message") {
+	if !log.Log(LogLevelWarn, "test", "message") {
 		t.Fatal("warn log shall be sent as default")
 	}
 
-	if !GInfo("test", "message") {
+	if !log.Info("test", "message") {
 		t.Fatal("info log shall be sent as default")
 	}
-	if !GLog(LogLevelInfo, "test", "message") {
+	if !log.Log(LogLevelInfo, "test", "message") {
 		t.Fatal("info log shall be sent as default")
 	}
 
-	if GDebug("test", "message") {
+	if log.Debug("test", "message") {
 		t.Fatal("debug log shall not be sent as default")
 	}
-	if GLog(LogLevelDebug, "test", "message") {
+	if log.Log(LogLevelDebug, "test", "message") {
 		t.Fatal("debug log shall not be sent as default")
 	}
 }
 
-func TestGLevel(t *testing.T) {
-	if GLevel() != LogLevelInfo {
+func TestLevel(t *testing.T) {
+	log := New()
+
+	if log.Level() != LogLevelInfo {
 		t.Fatal("default log level shall be INFO")
 	}
 
-	GSetLevel(LogLevelError)
-	if GLevel() != LogLevelError {
+	log.SetLevel(LogLevelError)
+	if log.Level() != LogLevelError {
 		t.Fatal("failed to set log level of global logger")
 	}
 
-	if !GFatal("test", "message") {
+	if !log.Fatal("test", "message") {
 		t.Fatal("fatal log shall be sent by error level")
 	}
-	if !GError("test", "message") {
+	if !log.Error("test", "message") {
 		t.Fatal("error log shall be sent by error level")
 	}
-	if GWarn("test", "message") {
+	if log.Warn("test", "message") {
 		t.Fatal("warn log shall not be sent by error level")
 	}
-	if GInfo("test", "message") {
+	if log.Info("test", "message") {
 		t.Fatal("info log shall not be sent by error level")
 	}
-	if GDebug("test", "message") {
+	if log.Debug("test", "message") {
 		t.Fatal("debug log shall not be sent by error level")
 	}
 
-	GSetLevel(LogLevelInfo)
-	if GLevel() != LogLevelInfo {
+	log.SetLevel(LogLevelInfo)
+	if log.Level() != LogLevelInfo {
 		t.Fatal("failed to set log level of global logger")
 	}
 }
 
-func TestGWriter(t *testing.T) {
-	if GWriter() != os.Stdout {
+func TestWriter(t *testing.T) {
+	log := New()
+
+	if log.Writer() != os.Stdout {
 		t.Fatal("default writer shall be standard output")
 	}
 
 	buf := new(bytes.Buffer)
-	GSetWriter(buf)
-	if GWriter() != buf {
+	log.SetWriter(buf)
+	if log.Writer() != buf {
 		t.Fatal("failed to set writer of global logger")
 	}
 
-	GInfo("test", "message")
+	log.Info("test", "message")
 	if !strings.Contains(buf.String(), "INFO. test message") {
 		t.Fatal("failed to output log to changed writer")
 	}
 
-	GSetWriter(os.Stdout)
-	if GWriter() != os.Stdout {
+	log.SetWriter(os.Stdout)
+	if log.Writer() != os.Stdout {
 		t.Fatal("failed to set writer of global logger")
 	}
 }
 
-type testGFormatter struct {
+type testFormatter struct {
 }
 
-func (p *testGFormatter) Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
+func (p *testFormatter) Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
 	msglist := []string{}
 	msglist = append(msglist, "["+level.String()[:1]+"]")
 	logmsg := fmt.Sprintln(v...)
@@ -111,26 +117,28 @@ func (p *testGFormatter) Format(logger *Logger, level LogLevel, time time.Time, 
 	return strings.Join(msglist, " ")
 }
 
-func TestGFormatter(t *testing.T) {
-	testFormatter := &testGFormatter{}
-	GSetFormatter(testFormatter)
-	if GFormatter() != testFormatter {
+func TestFormatter(t *testing.T) {
+	log := New()
+
+	testFormatter := &testFormatter{}
+	log.SetFormatter(testFormatter)
+	if log.Formatter() != testFormatter {
 		t.Fatal("failed to set formatter of global logger")
 	}
 
 	buf := new(bytes.Buffer)
-	GSetWriter(buf)
+	log.SetWriter(buf)
 
-	GInfo("test", "message")
+	log.Info("test", "message")
 	if !strings.Contains(buf.String(), "[I] test message") {
 		t.Fatal("failed to output log to changed writer")
 	}
 
-	GSetWriter(os.Stdout)
+	log.SetWriter(os.Stdout)
 
 	defaultFormatter := &DefaultFormatter{ShowTime: true, ShowLevel: true, ShowPositionLevel: LogLevelError}
-	GSetFormatter(defaultFormatter)
-	if GFormatter() != defaultFormatter {
+	log.SetFormatter(defaultFormatter)
+	if log.Formatter() != defaultFormatter {
 		t.Fatal("failed to set formatter of global logger")
 	}
 }
