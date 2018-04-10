@@ -52,7 +52,7 @@ type Logger struct {
 
 // New ...
 func New() *Logger {
-	return &Logger{level: LogLevelInfo, writer: os.Stdout, formatter: DefaultFormatter{showTime: true, showLevel: true, showPositionLevel: LogLevelError}}
+	return &Logger{level: LogLevelInfo, writer: os.Stdout, formatter: &DefaultFormatter{showTime: true, showLevel: true, showPositionLevel: LogLevelError}}
 }
 
 // Level ...
@@ -149,7 +149,7 @@ type DefaultFormatter struct {
 }
 
 // Format provides default log format of simplog
-func (p DefaultFormatter) Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
+func (p *DefaultFormatter) Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
 	msglist := []string{}
 
 	if p.showTime {
