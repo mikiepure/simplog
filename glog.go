@@ -24,14 +24,9 @@ func GSetWriter(writer io.Writer) {
 	glogger.SetWriter(writer)
 }
 
-// GFormatter ...
-func GFormatter() Formatter {
-	return glogger.Formatter()
-}
-
-// GSetFormatter ...
-func GSetFormatter(formatter Formatter) {
-	glogger.SetFormatter(formatter)
+// GSetFormat ...
+func GSetFormat(format FormatFunc) {
+	glogger.SetFormat(format)
 }
 
 // GFatal outputs a log message with level `Fatal`.

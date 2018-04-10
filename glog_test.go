@@ -100,26 +100,21 @@ func TestGWriter(t *testing.T) {
 	}
 }
 
-type testGFormatter struct {
-}
-
-func (p *testGFormatter) Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
-	msglist := []string{}
-	msglist = append(msglist, "["+level.String()[:1]+"]")
-	logmsg := fmt.Sprintln(v...)
-	msglist = append(msglist, logmsg[:len(logmsg)-1])
-	return strings.Join(msglist, " ")
-}
-
-func TestGFormatter(t *testing.T) {
-	testFormatter := &testGFormatter{}
-	GSetFormatter(testFormatter)
-	if GFormatter() != testFormatter {
-		t.Fatal("failed to set formatter of global logger")
+func TestGFormat(t *testing.T) {
+	testFormatFunc := func(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
+		msglist := []string{}
+		msglist = append(msglist, "["+level.String()[:1]+"]")
+		logmsg := fmt.Sprintln(v...)
+		msglist = append(msglist, logmsg[:len(logmsg)-1])
+		return strings.Join(msglist, " ")
 	}
+	GSetFormat(testFormatFunc)
 
 	buf := new(bytes.Buffer)
 	GSetWriter(buf)
+	if GWriter() != buf {
+		t.Fatal("failed to set writer of global logger")
+	}
 
 	GInfo("test", "message")
 	if !strings.Contains(buf.String(), "[I] test message") {
@@ -127,10 +122,9 @@ func TestGFormatter(t *testing.T) {
 	}
 
 	GSetWriter(os.Stdout)
-
-	defaultFormatter := &DefaultFormatter{ShowTime: true, ShowLevel: true, ShowPositionLevel: LogLevelError}
-	GSetFormatter(defaultFormatter)
-	if GFormatter() != defaultFormatter {
-		t.Fatal("failed to set formatter of global logger")
+	if GWriter() != os.Stdout {
+		t.Fatal("failed to set writer of global logger")
 	}
+
+	GSetFormat(FormatDefault)
 }
