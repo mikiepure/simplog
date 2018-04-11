@@ -45,14 +45,14 @@ func (p LogLevel) String() string {
 
 // Logger ...
 type Logger struct {
-	level  LogLevel
-	writer io.Writer
-	format FormatFunc
+	level     LogLevel
+	writer    io.Writer
+	formatter Formatter
 }
 
 // New ...
 func New() *Logger {
-	return &Logger{level: LogLevelInfo, writer: os.Stdout, format: FormatDefault}
+	return &Logger{level: LogLevelInfo, writer: os.Stdout, formatter: FormatFunc(FormatDefault)}
 }
 
 // Level ...
@@ -75,9 +75,14 @@ func (p *Logger) SetWriter(writer io.Writer) {
 	p.writer = writer
 }
 
-// SetFormat ...
-func (p *Logger) SetFormat(format FormatFunc) {
-	p.format = format
+// Formatter ...
+func (p *Logger) Formatter() Formatter {
+	return p.formatter
+}
+
+// SetFormatter ...
+func (p *Logger) SetFormatter(formatter Formatter) {
+	p.formatter = formatter
 }
 
 // Fatal outputs a log message with level `Fatal`.
@@ -125,14 +130,24 @@ func (p *Logger) log(level LogLevel, v ...interface{}) bool {
 		line = 0
 	}
 
-	msg := p.format(p, level, time, funcname, filename, line, v...)
+	msg := p.formatter.Format(p, level, time, funcname, filename, line, v...)
 
 	_, err := io.WriteString(p.writer, msg+"\n")
 	return err == nil
 }
 
-// FormatFunc is a function to change log message format as you like
+// Formatter is a interface to change log message format as you like
+type Formatter interface {
+	Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string
+}
+
+// FormatFunc is a function type to change log message format as you like
 type FormatFunc func(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string
+
+// Format is a function to change log message format as you like
+func (f FormatFunc) Format(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
+	return f(logger, level, time, funcname, filename, line, v...)
+}
 
 // FormatDefault provides default log format of simplog
 func FormatDefault(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {

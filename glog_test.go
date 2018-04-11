@@ -100,15 +100,14 @@ func TestGWriter(t *testing.T) {
 	}
 }
 
-func TestGFormat(t *testing.T) {
-	testFormatFunc := func(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
+func TestGFormatter(t *testing.T) {
+	GSetFormatter(FormatFunc(func(logger *Logger, level LogLevel, time time.Time, funcname string, filename string, line int, v ...interface{}) string {
 		msglist := []string{}
 		msglist = append(msglist, "["+level.String()[:1]+"]")
 		logmsg := fmt.Sprintln(v...)
 		msglist = append(msglist, logmsg[:len(logmsg)-1])
 		return strings.Join(msglist, " ")
-	}
-	GSetFormat(testFormatFunc)
+	}))
 
 	buf := new(bytes.Buffer)
 	GSetWriter(buf)
@@ -126,5 +125,5 @@ func TestGFormat(t *testing.T) {
 		t.Fatal("failed to set writer of global logger")
 	}
 
-	GSetFormat(FormatDefault)
+	GSetFormatter(FormatFunc(FormatDefault))
 }
