@@ -5,13 +5,21 @@ Simple logging library for golang.
 It has following features:
 
 * Simple logging interfaces with log level
-* Filtering by log level
-* Changing log destination
-* Changing log format 
+* Log can be filtered by log level
+* Log destination can be changed by setting io.Writer
+* Log format can be changed by callback function
 
 ## Logger
 
-A (local) logger can be created by New() function.
+A local logger can be created by New() function.
+
+It has following functions:
+
+* Fatal(), Error(), Warn(), Info(), or Debug() can be used for logging
+  * Arguments for logging are same as fmt.Println() or log.Println()
+* SetLevel() can be used for filtering by log level
+* SetWriter() can be used to change log destination
+* SetFormatter() can be used to change log format
 
 Sample Code:
 
@@ -102,9 +110,9 @@ File "log.txt":
 
 ## Global Logger
 
-The unique global logger is defined in simplog package.
+The unique global logger is defined in simplog package and it can be used by exported functions, which has a prefix of "G".
 
-It can be used by exported functions, which has a prefix of "G".
+A setting of the global logger can be changed by any other packages, so local logger should be used for a library or official application.
 
 Sample Code:
 

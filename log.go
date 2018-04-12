@@ -1,3 +1,4 @@
+// Package simplog privides simple logging features.
 package simplog
 
 import (
