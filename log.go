@@ -75,11 +75,6 @@ func (p *Logger) SetWriter(writer io.Writer) {
 	p.writer = writer
 }
 
-// Formatter ...
-func (p *Logger) Formatter() Formatter {
-	return p.formatter
-}
-
 // SetFormatter ...
 func (p *Logger) SetFormatter(formatter Formatter) {
 	p.formatter = formatter
@@ -125,9 +120,6 @@ func (p *Logger) log(level LogLevel, v ...interface{}) bool {
 	funcname := ""
 	if ok {
 		funcname = runtime.FuncForPC(pc).Name()
-	} else {
-		filename = ""
-		line = 0
 	}
 
 	msg := p.formatter.Format(p, level, time, funcname, filename, line, v...)

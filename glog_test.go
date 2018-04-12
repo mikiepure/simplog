@@ -72,10 +72,41 @@ func TestGLevel(t *testing.T) {
 		t.Fatal("debug log shall not be sent by error level")
 	}
 
+	GSetLevel(LogLevelDebug)
+	if GLevel() != LogLevelDebug {
+		t.Fatal("failed to set log level of global logger")
+	}
+
+	if !GFatal("test", "message") {
+		t.Fatal("fatal log shall be sent by debug level")
+	}
+	if !GError("test", "message") {
+		t.Fatal("error log shall be sent by debug level")
+	}
+	if !GWarn("test", "message") {
+		t.Fatal("warn log shall be sent by debug level")
+	}
+	if !GInfo("test", "message") {
+		t.Fatal("info log shall be sent by debug level")
+	}
+	if !GDebug("test", "message") {
+		t.Fatal("debug log shall be sent by debug level")
+	}
+
 	GSetLevel(LogLevelInfo)
 	if GLevel() != LogLevelInfo {
 		t.Fatal("failed to set log level of global logger")
 	}
+}
+
+func TestGUnknownLevel(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("panic is not occurred by undefined log level")
+		}
+	}()
+
+	GLog(10, "undefined level message")
 }
 
 func TestGWriter(t *testing.T) {

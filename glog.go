@@ -24,11 +24,6 @@ func GSetWriter(writer io.Writer) {
 	glogger.SetWriter(writer)
 }
 
-// GFormatter ...
-func GFormatter() Formatter {
-	return glogger.Formatter()
-}
-
 // GSetFormatter ...
 func GSetFormatter(formatter Formatter) {
 	glogger.SetFormatter(formatter)
